@@ -1,4 +1,75 @@
-## About MeshCore
+# SenseCAP Solar Node P1 Recovery
+
+> **Experimental firmware — active bench and field testing.** Do not deploy
+> this build as an unattended safety-critical system. Keep a UF2/SWD recovery
+> path and validate the real shutdown/wake thresholds on every unit.
+
+This repository is a test-oriented fork of
+[MeshCore](https://github.com/meshcore-dev/MeshCore) v1.17.0 for the
+**Seeed Studio SenseCAP Solar Node P1**. It adds runtime battery protection,
+autonomous solar recovery, a low-power daily GPS schedule, persistent
+summer/winter GPS modes and a persistent operational event journal.
+
+Current experimental release: **recovery.4**.
+
+## Added for the Solar Node P1
+
+- filtered battery measurement every 30 seconds;
+- `normal`, `economy` and `critical` power states with hysteresis;
+- shutdown after 10 continuous minutes below 3.30 V;
+- field build: true nRF52840 SYSTEMOFF with LPCOMP/VBUS wake;
+- test build: low-power SYSTEM ON polling and recovery at 3.45 V;
+- one-hour GPS window every 24 hours in winter mode;
+- persistent `gps override on` summer mode and `gps override off` winter mode;
+- temporary GPS overrides from 1 to 168 hours;
+- 64-entry CRC-protected event journal for boots, shutdowns, power states,
+  GPS windows, fixes, acquisition time and errors;
+- local CLI diagnostics for voltage, wake policy, GPS and charging guard.
+
+The low-battery protection always overrides a GPS request. The pack NTC is
+handled autonomously by the CN3165 charger and is not documented as being
+routed to an nRF52840 ADC pin; the firmware therefore reports this limitation
+instead of presenting MCU temperature as battery temperature.
+
+## Documentation
+
+- [Practical CLI guide for recovery.4](./docs/SENSECAP_P1_CLI.md)
+- [Power/recovery design and mandatory bench validation](./docs/sensecap_solar_recovery.md)
+- [Upstream MeshCore CLI reference](./docs/cli_commands.md)
+
+## Build
+
+```text
+pio run -e SenseCap_Solar_repeater
+pio run -e SenseCap_Solar_repeater_test345
+```
+
+The first environment is the field SYSTEMOFF/LPCOMP build. The second is the
+temporary 3.45 V recovery-test build. Prebuilt files are published only as
+GitHub **pre-releases** while validation remains incomplete.
+
+## Project status
+
+- Host policy tests: 27/27 passed.
+- P1 field and 3.45 V test profiles: build successfully.
+- Generic XIAO nRF52 repeater: regression build successfully.
+- Persistent journal: validated on a real P1 across reboot.
+- Autonomous solar shutdown/recovery cycle: still under field test.
+- Actual LPCOMP rising voltage at temperature extremes: not yet qualified.
+
+Issues and measured test results are welcome. Please include the firmware
+version, `get power.status`, `get pwrmgt.bootreason`, `eventlog status` and the
+relevant `eventlog` lines, but **never publish a private key or password**.
+
+## License and upstream attribution
+
+This fork retains the upstream MIT license and copyright notices. The base
+used for recovery.4 is MeshCore commit
+`727fc0512ce08bfd7b499e46daa7fca6eeec730d`.
+
+---
+
+## About upstream MeshCore
 
 MeshCore is a lightweight, portable C++ library that enables multi-hop packet routing for embedded projects using LoRa and other packet radios. It is designed for developers who want to create resilient, decentralized communication networks that work without the internet.
 
