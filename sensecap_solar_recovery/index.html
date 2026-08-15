@@ -280,6 +280,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../RECOVERY5_RELEASE_NOTES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    recovery.5-alerts — experimental pre-release
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RECOVERY6_RELEASE_NOTES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    recovery.6-guarded — préversion expérimentale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../SENSECAP_P1_CLI/" class="md-nav__link">
         
   
@@ -287,7 +341,7 @@
   <span class="md-ellipsis">
     
   
-    Guide CLI — SenseCAP Solar Node P1 recovery.4
+    Guide CLI — SenseCAP Solar Node P1 recovery.6-guarded
   
 
     
@@ -881,15 +935,23 @@ commit <code>727fc0512ce08bfd7b499e46daa7fca6eeec730d</code>.</p>
   daily window is still open.</li>
 <li>Below 3300 mV, the state becomes <code>critical</code>.</li>
 <li>The critical timer is cleared only at or above 3350 mV.</li>
+<li>At or below 3350 mV, an encrypted pre-shutdown alert is sent to every
+  configured public key while the node and LoRa radio are still fully active.
+  This alert rearms after the battery reaches 3400 mV.</li>
 <li>After 600 seconds continuously in the critical band, GPS and LoRa are shut
-  down, <code>LOW_VOLTAGE</code> is stored in GPREGRET2, LPCOMP/VBUS wake is armed and
-  the nRF52840 enters SYSTEMOFF.</li>
+  down. A final priority alert gets a 12-second radio grace period (one retry),
+  then <code>LOW_VOLTAGE</code> is stored in GPREGRET2, LPCOMP/VBUS wake is armed and the
+  nRF52840 enters SYSTEMOFF.</li>
+<li>After a complete boot, an encrypted startup alert reports measured voltage,
+  reset cause and the previous shutdown reason.</li>
 <li>USB/external power suppresses runtime low-voltage shutdown.</li>
 <li>Invalid ADC readings outside 1000..5000 mV cannot directly request shutdown;
   a physically possible deeply discharged battery remains critical.</li>
 </ul>
-<p>All policy values are compile-time overrides in
-<code>variants/sensecap_solar/variant.h</code>.</p>
+<p>The power-state values are compile-time overrides in
+<code>variants/sensecap_solar/variant.h</code>. Alert recipients and the 3350/3400 mV
+alert hysteresis are persistent and can be changed through the authenticated
+CLI without rebuilding the firmware.</p>
 <h2 id="voltage-wake-limitation">Voltage wake limitation</h2>
 <p>The official XIAO nRF52840 Plus battery divider is 1 MOhm / 499 kOhm on AIN7.
 The available LPCOMP steps do not include an exact 3.60 V battery threshold.
@@ -928,12 +990,21 @@ gps override 24h
 gps override 96h
 gps override on
 gps override off
+alert status
+alert threshold
+alert test
 </code></pre>
 <p>Timed values from 1 to 168 hours are accepted. The override only opens the GPS
 acquisition window; a low-battery economy or critical state still forces the
 GPS off and therefore always has priority. <code>on</code> and <code>off</code> are stored in a
 separate one-byte LittleFS marker so changing season does not rewrite the main
 MeshCore preferences. These commands are deliberately local-serial only.</p>
+<p>Operational alert commands (<code>alert list</code>, <code>alert get</code>, <code>alert add</code>,
+<code>alert remove</code>, <code>alert clear</code>, <code>alert threshold</code>, and <code>alert test</code>) are also
+accepted over an authenticated MeshCore administrator CLI session. The list
+holds up to four 32-byte public keys. Messages are individually encrypted;
+unknown routes use encrypted flood delivery and known ACL routes use direct
+delivery.</p>
 <p>The existing commands remain available:</p>
 <pre><code class="language-text">get pwrmgt.support
 get pwrmgt.source
