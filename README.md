@@ -8,10 +8,12 @@ This repository is a test-oriented fork of
 [MeshCore](https://github.com/meshcore-dev/MeshCore) v1.17.0 for the
 **Seeed Studio SenseCAP Solar Node P1**. It adds runtime battery protection,
 autonomous solar recovery, a low-power daily GPS schedule, persistent
-summer/winter GPS modes, private operational alerts and a persistent event
-journal.
+summer/winter GPS modes, selectable private/channel operational alerts and a
+persistent event journal.
 
-Current experimental release: **recovery.6-guarded**.
+Current experimental pre-release: **recovery.7.4-radio-cli-time**. Its
+read-only channel CLI was validated on a real P1/T1000E link; the underlying
+3.45 V solar shutdown/recovery cycle was validated in recovery.6.
 
 ## Added for the Solar Node P1
 
@@ -23,24 +25,33 @@ Current experimental release: **recovery.6-guarded**.
 - one-hour GPS window every 24 hours in winter mode;
 - persistent `gps override on` summer mode and `gps override off` winter mode;
 - temporary GPS overrides from 1 to 168 hours;
-- encrypted start, 3.35 V pre-shutdown and final shutdown alerts for up to
-  four CLI-managed MeshCore public keys, with ACK and one retry;
+- persistent `gps powerguard economy|critical|off`, while final SYSTEMOFF
+  protection always remains enabled;
+- start, 3.35 V pre-shutdown and final shutdown alerts sent either privately
+  or as standard readable MeshCore channel messages;
+- explicit `bat low public` selection, or a custom monitoring channel via
+  `bat low channel <name> <PSK>`; no new installation selects Public by default;
+- wake and first-GPS-fix messages on the selected alert destination;
+- read-only `!p1 status|battery|gps|version|alerts|help` diagnostics directly
+  in a custom monitoring channel, with staggered replies from multiple nodes;
 - 64-entry CRC-protected event journal for boots, shutdowns, power states,
   GPS windows, fixes, acquisition time and errors;
 - local CLI diagnostics for voltage, wake policy, GPS and charging guard.
 
-The low-battery protection always overrides a GPS request. The pack NTC is
+The final low-battery SYSTEMOFF always overrides a GPS request. The accessory
+GPS guard can deliberately be relaxed for a discharge test. The pack NTC is
 handled autonomously by the CN3165 charger and is not documented as being
 routed to an nRF52840 ADC pin; the firmware therefore reports this limitation
 instead of presenting MCU temperature as battery temperature.
 
 ## Documentation
 
-- [Practical CLI guide for recovery.6](./docs/SENSECAP_P1_CLI.md) — commandes
+- [Practical CLI guide for recovery.7.4](./docs/SENSECAP_P1_CLI.md) — commandes
   batterie, GPS, alertes, journal, radio et régions, avec le profil réseau
   effectivement validé sur le P1 de test et sa procédure de relecture après
   redémarrage.
 - [recovery.6 experimental release notes](./docs/RECOVERY6_RELEASE_NOTES.md)
+- [recovery.7.4 candidate notes](./docs/RECOVERY7_RELEASE_NOTES.md)
 - [Power/recovery design and mandatory bench validation](./docs/sensecap_solar_recovery.md)
 - [Upstream MeshCore CLI reference](./docs/cli_commands.md)
 
@@ -62,7 +73,11 @@ GitHub **pre-releases** while validation remains incomplete.
 - P1 field and 3.45 V test profiles: build successfully.
 - Generic XIAO nRF52 repeater: regression build successfully.
 - Persistent journal: validated on a real P1 across reboot.
-- Autonomous solar shutdown/recovery cycle: still under field test.
+- Custom-channel alerts and read-only `!p1 gps` query/reply: validated on a
+  real P1/T1000E link, including incoming-scope reuse and visible timestamps.
+- Autonomous solar shutdown/recovery cycle: validated once in the field with
+  the 3.45 V test profile; more cycles and the field LPCOMP profile remain to
+  be qualified.
 - Actual LPCOMP rising voltage at temperature extremes: not yet qualified.
 
 Issues and measured test results are welcome. Please include the firmware
