@@ -1,5 +1,7 @@
 # SenseCAP Solar Node P1 Recovery
 
+Firmware family: [Heltec V4 Recovery](https://github.com/bouyous/MeshCore-Heltec-V4-Recovery) · [XIAO Dual-Radio Recovery](https://github.com/bouyous/meshcore-xiao-s3-dual-radio-repeater) · [XIAO Single-Radio Recovery](https://github.com/bouyous/MeshCore-XIAO-S3-WIO-Recovery)
+
 > **Experimental firmware — active bench and field testing.** Do not deploy
 > this build as an unattended safety-critical system. Keep a UF2/SWD recovery
 > path and validate the real shutdown/wake thresholds on every unit.
